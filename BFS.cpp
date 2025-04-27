@@ -7,7 +7,7 @@ const int INF = INT_MAX;
 void bfs(int n, int adj[max_nodes][max_nodes], int src, int goal) {
     bool vis[max_nodes] = {false};
     int prev[max_nodes], cost[max_nodes];
-    int queue[max_nodes];
+    int queue[max_nodes];//hi
     int front = 0, rear = 0;
 
     // Initialize arrays
