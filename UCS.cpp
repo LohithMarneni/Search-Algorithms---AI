@@ -1,101 +1,93 @@
-#include <iostream>
+#include <bits/stdc++.h>
 using namespace std;
-
-const int MAX = 100;
-const int INF = 1000000; // large value as infinity
-
-// To print the path
-void printPath(int parent[], int goal) {
-    int path[MAX];
-    int index = 0;
-    int current = goal;
-    
-    while (current != -1) {
-        path[index++] = current;
-        current = parent[current];
-    }
-    
-    cout << "Path: ";
-    for (int i = index - 1; i >= 0; i--) {
-        cout << path[i] << " ";
-    }
-    cout << endl;
-}
-
-// Uniform Cost Search without Priority Queue
-void ucs(int graph[MAX][MAX], int start, int goal, int n) {
-    int parent[MAX];
-    int pathCost[MAX];
-    bool visited[MAX];
-    
+const int MAX_NODES = 50;
+const int INF = INT_MAX; 
+void uniformCostSearch(int n, int adj[MAX_NODES][MAX_NODES], int start, int goal) {
+    int cost[MAX_NODES];          // Total cost to reach each node
+    int visited[MAX_NODES]={0};       // 0 = unvisited, 1 = visited
+    int parent[MAX_NODES];        // To reconstruct the path
+    int priority_queue[MAX_NODES];   // Like a queue, but manual priority
+    int front = 0, rear = 0;
+    // Initialize arrays
     for (int i = 0; i < n; i++) {
+        cost[i] = INF;
         parent[i] = -1;
-        pathCost[i] = INF;
-        visited[i] = false;
     }
-    
-    pathCost[start] = 0;
-    
-    for (int count = 0; count < n; count++) {
-        // Find the unvisited node with the smallest path cost
-        int minCost = INF;
-        int current = -1;
-        
-        for (int i = 0; i < n; i++) {
-            if (!visited[i] && pathCost[i] < minCost) {
-                minCost = pathCost[i];
-                current = i;
+
+    cost[start] = 0;
+    priority_queue[rear++] = start;
+
+    while (front < rear) {
+        // Find the node with the minimum cost
+        int minCost = INF, minIndex = -1;
+        for (int i = front; i < rear; i++) {
+            int node = priority_queue[i];
+            if (!visited[node] && cost[node] < minCost) {
+                minCost = cost[node];
+                minIndex = i;
             }
         }
-        
-        if (current == -1) {
-            break; // No reachable unvisited node
+
+        if (minIndex == -1) break;
+
+        // Remove the node with the minimum cost from the process list
+        int currentNode = priority_queue[minIndex];
+        for (int i = minIndex; i < rear - 1; i++) {
+            priority_queue[i] = priority_queue[i + 1];
         }
+        rear--;
         
-        visited[current] = true;
-        
-        if (current == goal) {
-            cout << "Goal reached with a path cost of " << pathCost[current] << endl;
-            printPath(parent, goal);
-            return;
+        visited[currentNode] = 1;
+
+        // If goal is reached, break the loop
+        if (currentNode == goal) {
+            break;
         }
-        
-        for (int i = 0; i < n; i++) {
-            if (graph[current][i] > 0 && !visited[i]) {
-                int newCost = pathCost[current] + graph[current][i];
-                if (newCost < pathCost[i]) {
-                    pathCost[i] = newCost;
-                    parent[i] = current;
+
+        // Explore neighbors of the current node
+        for (int neighbor = 0; neighbor < n; neighbor++) {
+            if (adj[currentNode][neighbor] > 0 && !visited[neighbor]) {
+                int newCost = cost[currentNode] + adj[currentNode][neighbor];
+                if (newCost < cost[neighbor]) {
+                    cost[neighbor] = newCost;
+                    parent[neighbor] = currentNode;
+                    priority_queue[rear++] = neighbor; // Add the neighbor to the process list
                 }
             }
         }
     }
-    
-    cout << "Goal can't be reached!" << endl;
+
+    if (cost[goal] == INF) {
+        cout << "No path found." << endl;
+        return;
+    }
+
+    // Reconstruct the path
+    int path[MAX_NODES], pathLength = 0;
+    for (int node = goal; node != -1; node = parent[node]) {
+        path[pathLength++] = node;
+    }
+
+    // Output the path
+    cout << "Path: ";
+    for (int i = pathLength - 1; i >= 0; i--) {
+        cout << path[i] << " ";
+    }
+    cout << endl;
+    cout << "Total Cost: " << cost[goal] << endl;
 }
 
 int main() {
-    int n, start, goal;
-    int graph[MAX][MAX];
     
-    cout << "Enter number of nodes: ";
-    cin >> n;
-    
-    cout << "Enter adjacency matrix: " << endl;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            cout << "Enter cost for node " << i << " to node " << j << ": ";
-            cin >> graph[i][j];
-        }
-    }
-    
-    cout << "Enter start node: ";
-    cin >> start;
-    
-    cout << "Enter goal node: ";
-    cin >> goal;
-    
-    ucs(graph, start, goal, n);
-    
+    int n = 5; // Example number of nodes
+    int src = 0, goal = 4; // Example source and goal nodes
+    int adj[MAX_NODES][MAX_NODES] = { // Example adjacency matrix
+        {0, 5, 0, 0, 0},
+        {5, 0, 7, 10, 0},
+        {0, 7, 0, 3, 0},
+        {0, 10, 3, 0, 6},
+        {0, 0, 0, 6, 0}
+    };
+    uniformCostSearch(n, adj, src, goal);
     return 0;
 }
