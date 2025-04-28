@@ -54,10 +54,10 @@ void bestFirstSearch(int n, int adj[MAX_NODES][MAX_NODES], int heuristic[MAX_NOD
         for (int neighbor = 0; neighbor < n; neighbor++) {
             if (adj[currentNode][neighbor] > 0 && !visited[neighbor]) {
                 int newCost = cost[currentNode] + adj[currentNode][neighbor];
-                if (newCost < cost[neighbor]) {
+                // if (newCost < cost[neighbor]) {
                     cost[neighbor] = newCost;
                     parent[neighbor] = currentNode;
-                }
+                // }
                 processList[rear++] = neighbor; // Add the neighbor to the process list
             }
         }
