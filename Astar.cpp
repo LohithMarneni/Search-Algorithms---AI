@@ -1,99 +1,90 @@
-#include<stdio.h>
-#include<stdbool.h> // include this to use true and false
-
-#define M 20
-#define INF 99999
-
-int getMinNode(bool toExplore[], int g[], int h[], int n) {
-    int mini = -1;
-    int min_value = INF;
-    for (int i = 0; i < n; i++) {
-        if (toExplore[i] && (g[i] + h[i] < min_value)) {
-            min_value = g[i] + h[i];
-            mini = i;
-        }
-    }
-    return mini;
-}
-
-void Astar(int adj[M][M], int heu[M], int n, int source, int goal) {
-    bool toExplore[M] = {false}; // use bool array
-    int g[M]; // stores the shortest known cost
-    int parent[M];
-    bool explored[M] = {false}; // use bool array
-
+#include <iostream>
+#include <cmath>
+using namespace std;
+const int MAX_NODES = 50;
+const int INF = 1e9; // A very large value
+void aStarSearch(int n, int adj[MAX_NODES][MAX_NODES], int heuristic[MAX_NODES], int start, int goal) {
+    int g[MAX_NODES];          // Cost to reach each node (g(n))
+    int f[MAX_NODES];          // Estimated total cost (f(n) = g(n) + h(n))
+    int visited[MAX_NODES];    // 0 = unvisited, 1 = visited
+    int parent[MAX_NODES];     // To reconstruct the path
+    int processList[MAX_NODES]; // List to manage nodes to process
+    int front = 0, rear = 0;
+    // Initialize arrays
     for (int i = 0; i < n; i++) {
         g[i] = INF;
+        f[i] = INF;
+        visited[i] = 0;
         parent[i] = -1;
     }
-    g[source] = 0; 
-    toExplore[source] = true; 
-
-    while (1) {
-        int curr = getMinNode(toExplore, g, heu, n);
-        if (curr == -1 || curr == goal) { // no more node to explore or we got the node 
+    g[start] = 0;
+    f[start] = heuristic[start]; // Initial f value for start node
+    processList[rear++] = start;
+    while (front < rear) {
+        // Find the node with the minimum f value
+        int minF = INF, minIndex = -1;
+        for (int i = front; i < rear; i++) {
+            int node = processList[i];
+            if (!visited[node] && f[node] < minF) {
+                minF = f[node];
+                minIndex = i;
+            }
+        }
+        if (minIndex == -1) break;
+        // Remove the node with the minimum f value from the process list
+        int currentNode = processList[minIndex];
+        for (int i = minIndex; i < rear - 1; i++) {
+            processList[i] = processList[i + 1];
+        }
+        rear--;
+        visited[currentNode] = 1;
+        // If goal is reached, break the loop
+        if (currentNode == goal) {
             break;
         }
-
-        toExplore[curr] = false; // false is not yet to explored 
-        explored[curr] = true; // true is explored
-
-        for (int i = 0; i < n; i++) {
-            if (adj[curr][i] > 0 && !explored[i]) {
-                int newc = g[curr] + adj[curr][i];
-                
-                if (!toExplore[i] || newc < g[i]) {
-                    g[i] = newc;
-                    parent[i] = curr;
-                    toExplore[i] = true;
+        // Explore neighbors of the current node
+        for (int neighbor = 0; neighbor < n; neighbor++) {
+            if (adj[currentNode][neighbor] > 0 && !visited[neighbor]) {
+                int newG = g[currentNode] + adj[currentNode][neighbor];
+                if (newG < g[neighbor]) {
+                    g[neighbor] = newG;
+                    f[neighbor] = g[neighbor] + heuristic[neighbor];
+                    parent[neighbor] = currentNode;
+                    processList[rear++] = neighbor; // Add the neighbor to the process list
                 }
             }
         }
     }
-
-    if (g[goal] == INF) {
-        printf("No path found\n");
+    if (f[goal] == INF) {
+        cout << "No path found." << endl;
         return;
     }
-    printf("Shortest path: ");
-    int path[M], path_len = 0;
-    for (int i = goal; i != -1; i = parent[i]) {
-        path[path_len++] = i;
+    // Reconstruct the path
+    int path[MAX_NODES], pathLength = 0;
+    for (int node = goal; node != -1; node = parent[node]) {
+        path[pathLength++] = node;
     }
-    for (int i = path_len - 1; i >= 0; i--) {
-        printf("%d ", path[i]);
+    // Output the path
+    cout << "Path: ";
+    for (int i = pathLength - 1; i >= 0; i--) {
+        cout << path[i] << " ";
     }
-    printf("\nPath cost: %d\n", g[goal]);
+    cout << endl;
+    cout << "Total Cost: " << g[goal] << endl;
 }
 
 int main() {
-    int n, source, goal;
-    int adj[M][M];
-    int heu[M];
-
-    printf("Enter the number of nodes: ");
-    while (scanf("%d", &n) != 1 || n <= 0 || n > M) {
-        printf("Invalid input. Enter a valid number of nodes (1 to %d): ", M);
-        while (getchar() != '\n');
-    }
-
-    printf("Enter adjacency matrix:\n");
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            scanf("%d", &adj[i][j]);
-        }
-    }
-
-    printf("Enter heuristic values for each node:\n");
-    for (int i = 0; i < n; i++) {
-        scanf("%d", &heu[i]);
-    }
-
-    printf("Enter the source node: ");
-    scanf("%d", &source);
-    printf("Enter the goal node: ");
-    scanf("%d", &goal);
-
-    Astar(adj, heu, n, source, goal);
+    int n=6;
+    int adj[MAX_NODES][MAX_NODES]={
+        {0,2,0,3,0,0},
+        {2,0,1,0,0,9},
+        {0,1,0,0,0,0},
+        {3,0,0,0,6,0},
+        {0,0,0,6,0,1},
+        {0,9,0,0,1,0}
+    };
+    int heuristic[MAX_NODES]={11,6,99,7,1,0};  // Heuristic values for each node
+    int start=0, goal=5;
+    aStarSearch(n, adj, heuristic, start, goal);
     return 0;
 }
